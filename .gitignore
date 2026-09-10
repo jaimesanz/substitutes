@@ -19,3 +19,6 @@ db.sqlite3
 .DS_Store
 .idea/
 .vscode/
+
+# impeccable local machine state (consent flag, etc.)
+.impeccable/config.local.json
