@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.full_name }} · Reemplazos{% endblock %}
+
+{% block content %}
+<a href="{% url 'schools:directory' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> Volver a la búsqueda</a>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="avatar-circle me-3" style="width:4rem;height:4rem;font-size:1.5rem;">{{ profile.full_name|make_list|first|default:"?" }}</span>
+                    <div>
+                        <h3 class="fw-bold mb-0">{{ profile.full_name }}</h3>
+                        <span class="text-muted">{{ profile.comuna|default:"" }}{% if profile.region %}, {{ profile.region }}{% endif %}</span>
+                    </div>
+                    {% if profile.evaluation.rating %}
+                        <span class="ms-auto badge text-bg-success fs-6"><i class="bi bi-star-fill me-1"></i>{{ profile.evaluation.rating }}/5</span>
+                    {% endif %}
+                </div>
+                <span class="badge text-bg-success mb-3"><i class="bi bi-patch-check me-1"></i>Perfil evaluado y aprobado</span>
+                <p>{{ profile.bio|default:"Sin presentación."|linebreaksbr }}</p>
+
+                <h6 class="fw-semibold mt-4">Asignaturas</h6>
+                <div>{% for s in profile.subjects.all %}<span class="badge badge-subject me-1 mb-1">{{ s }}</span>{% empty %}<span class="text-muted">—</span>{% endfor %}</div>
+
+                <div class="row mt-4">
+                    <div class="col-sm-6">
+                        <h6 class="fw-semibold">Disponibilidad</h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li><i class="bi bi-calendar-week me-1 text-brand"></i>Días: {{ profile.available_weekdays|join:", "|default:"—" }}</li>
+                            <li><i class="bi bi-clock me-1 text-brand"></i>{% if profile.available_short %}Reemplazos cortos{% endif %}{% if profile.available_short and profile.available_long %} · {% endif %}{% if profile.available_long %}largos{% endif %}</li>
+                            {% if profile.available_from %}<li><i class="bi bi-calendar-check me-1 text-brand"></i>Desde: {{ profile.available_from }}</li>{% endif %}
+                            {% if profile.availability_notes %}<li><i class="bi bi-info-circle me-1 text-brand"></i>{{ profile.availability_notes }}</li>{% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <h6 class="fw-semibold">Idiomas / comunas preferidas</h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li><i class="bi bi-translate me-1 text-brand"></i>{% if profile.is_bilingual %}Bilingüe{% endif %} {{ profile.languages|default:"" }}</li>
+                            <li><i class="bi bi-geo-alt me-1 text-brand"></i>{% for c in profile.preferred_comunas.all %}{{ c }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="fw-semibold mb-3">Documentos y certificados</h5>
+                {% for c in profile.certificates.all %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <span><i class="bi bi-file-earmark-text text-brand me-1"></i>{{ c.name }} <span class="badge text-bg-light">{{ c.get_doc_type_display }}</span></span>
+                        <a href="{{ c.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">Descargar</a>
+                    </div>
+                {% empty %}
+                    <p class="text-muted mb-0">Este profe aún no ha subido documentos.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top" style="top:1rem;">
+            <div class="card-body">
+                <h5 class="fw-semibold mb-3"><i class="bi bi-telephone me-1 text-brand"></i>Contacto</h5>
+                <p class="mb-2"><span class="text-muted small d-block">Teléfono</span>
+                    {% if profile.phone %}<a href="tel:{{ profile.phone }}" class="fs-5 text-brand fw-semibold">{{ profile.phone }}</a>{% else %}—{% endif %}</p>
+                <p class="mb-3"><span class="text-muted small d-block">Email</span>
+                    <a href="mailto:{{ profile.contact_email|default:profile.user.email }}">{{ profile.contact_email|default:profile.user.email }}</a></p>
+                <p class="text-muted small mb-0">Contacta directamente al profe para coordinar el reemplazo.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

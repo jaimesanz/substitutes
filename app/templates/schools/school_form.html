@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Crear colegio · Reemplazos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <h2 class="fw-bold mb-3">Crear colegio</h2>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button class="btn btn-brand w-100 mt-2">Crear y empezar a buscar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
