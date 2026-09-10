@@ -8,17 +8,19 @@
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <span class="avatar-circle me-3" style="width:4rem;height:4rem;font-size:1.5rem;">{{ profile.full_name|make_list|first|default:"?" }}</span>
-                    <div>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="avatar-circle" style="width:4rem;height:4rem;font-size:1.6rem;">{{ profile.full_name|make_list|first|default:"?" }}</span>
+                    <div class="me-auto">
                         <h3 class="fw-bold mb-0">{{ profile.full_name }}</h3>
-                        <span class="text-muted">{{ profile.comuna|default:"" }}{% if profile.region %}, {{ profile.region }}{% endif %}</span>
+                        <span class="text-muted"><i class="bi bi-geo-alt"></i> {{ profile.comuna|default:"" }}{% if profile.region %}, {{ profile.region }}{% endif %}</span>
                     </div>
-                    {% if profile.evaluation.rating %}
-                        <span class="ms-auto badge text-bg-success fs-6"><i class="bi bi-star-fill me-1"></i>{{ profile.evaluation.rating }}/5</span>
-                    {% endif %}
+                    <span class="seal seal-lg" title="Evaluada y aprobada" style="--sz:3.4rem;"><i class="bi bi-patch-check-fill"></i></span>
                 </div>
-                <span class="badge text-bg-success mb-3"><i class="bi bi-patch-check me-1"></i>Perfil evaluado y aprobado</span>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge-pill badge-verified"><i class="bi bi-patch-check-fill"></i> Evaluada y aprobada</span>
+                    {% if profile.evaluation.rating %}<span class="rating-chip"><i class="bi bi-star-fill"></i> {{ profile.evaluation.rating }}.0 / 5</span>{% endif %}
+                    {% if profile.is_bilingual %}<span class="badge badge-bilingual"><i class="bi bi-translate"></i> Bilingüe</span>{% endif %}
+                </div>
                 <p>{{ profile.bio|default:"Sin presentación."|linebreaksbr }}</p>
 
                 <h6 class="fw-semibold mt-4">Asignaturas</h6>

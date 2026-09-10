@@ -1,60 +1,167 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="hero p-4 p-md-5 mb-5">
-    <div class="row align-items-center g-4">
-        <div class="col-lg-7">
-            <h1 class="display-5 fw-bold mb-3">La base de datos de profes para reemplazos</h1>
-            <p class="fs-5 mb-4 opacity-75">
-                Encuentra profesores disponibles, <strong>evaluados por una sicóloga laboral</strong>,
-                filtrando por asignatura, comuna, tipo de reemplazo y más. Una base que tu colegio no tiene… hasta ahora.
+<section class="hero p-4 p-md-5 mb-5">
+    <div class="row align-items-center g-4 g-lg-5">
+        <div class="col-lg-6">
+            <span class="eyebrow d-inline-block mb-3">Base de datos de reemplazos · Chile</span>
+            <h1 class="display-5 mb-3">Profesores evaluados, listos para reemplazar.</h1>
+            <p class="fs-5 hero-sub mb-4">
+                Cada profe de la base es revisado por una <strong>sicóloga laboral</strong> antes
+                de aparecer. Tu colegio filtra por asignatura, comuna y disponibilidad, y contacta
+                directo. Sin intermediarios, sin adivinar.
             </p>
-            <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap gap-2 mb-4">
                 <a href="{% url 'register_school' %}" class="btn btn-light btn-lg">
-                    <i class="bi bi-building me-1"></i>Soy colegio
+                    <i class="bi bi-search me-1"></i>Buscar profesores
                 </a>
                 <a href="{% url 'register_applicant' %}" class="btn btn-outline-light btn-lg">
-                    <i class="bi bi-person-badge me-1"></i>Soy profe
+                    <i class="bi bi-person-badge me-1"></i>Postular como profe
                 </a>
             </div>
+            <div class="d-flex align-items-center gap-4">
+                <div>
+                    <div class="stat-num">100%</div>
+                    <div class="stat-label">perfiles evaluados</div>
+                </div>
+                <div class="stat-divider align-self-stretch"></div>
+                <div>
+                    <div class="stat-num">1 a 1</div>
+                    <div class="stat-label">entrevista con sicóloga</div>
+                </div>
+                <div class="stat-divider align-self-stretch"></div>
+                <div>
+                    <div class="stat-num">Directo</div>
+                    <div class="stat-label">contacto sin comisión</div>
+                </div>
+            </div>
         </div>
-        <div class="col-lg-5 text-center d-none d-lg-block">
-            <i class="bi bi-clipboard2-check" style="font-size: 11rem; opacity:.35;"></i>
-        </div>
-    </div>
-</div>
 
-<div class="row g-4 mb-5">
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm card-hover">
-            <div class="card-body">
-                <div class="feature-icon mb-3"><i class="bi bi-person-lines-fill"></i></div>
-                <h5 class="fw-semibold">Profes crean su perfil</h5>
-                <p class="text-muted mb-0">Suben títulos, certificado de antecedentes, disponibilidad, comunas de preferencia y asignaturas.</p>
+        <div class="col-lg-6 d-none d-lg-block">
+            {# Show, don't tell: a sample verified dossier card #}
+            <div class="spec-card ms-lg-auto" style="max-width: 24rem;">
+                <div class="spec-head d-flex align-items-center gap-3 p-3">
+                    <span class="avatar-circle" style="width:3.25rem;height:3.25rem;">A</span>
+                    <div class="me-auto">
+                        <div style="font-family:'Spectral',serif;font-weight:600;font-size:1.1rem;">Ana Díaz</div>
+                        <div class="text-muted small">Ñuñoa, R. Metropolitana</div>
+                    </div>
+                    <span class="seal" title="Evaluada y aprobada"><i class="bi bi-patch-check-fill"></i></span>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        <span class="badge badge-subject">Lenguaje</span>
+                        <span class="badge badge-subject">Comunicación</span>
+                        <span class="badge badge-bilingual"><i class="bi bi-translate"></i> Bilingüe</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2" style="border-top:1px solid var(--line);">
+                        <div class="d-flex gap-3 small text-muted">
+                            <span><i class="bi bi-clock text-brand"></i> Cortos</span>
+                            <span><i class="bi bi-calendar3 text-brand"></i> Largos</span>
+                        </div>
+                        <span class="rating-chip"><i class="bi bi-star-fill"></i> 5.0</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm card-hover">
-            <div class="card-body">
-                <div class="feature-icon mb-3"><i class="bi bi-patch-check"></i></div>
-                <h5 class="fw-semibold">Evaluación profesional</h5>
-                <p class="text-muted mb-0">Una sicóloga laboral revisa y aprueba cada perfil. Los colegios ven solo candidatos evaluados.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm card-hover">
-            <div class="card-body">
-                <div class="feature-icon mb-3"><i class="bi bi-funnel"></i></div>
-                <h5 class="fw-semibold">Colegios filtran y contactan</h5>
-                <p class="text-muted mb-0">“Necesito un profe de lenguaje por una semana.” Filtran, ven el perfil y contactan directo.</p>
-            </div>
-        </div>
-    </div>
-</div>
+</section>
 
-<div class="text-center">
-    <p class="text-muted">¿Ya tienes cuenta? <a href="{% url 'login' %}">Ingresa aquí</a>.</p>
-</div>
+{# --- How it works: a genuine 3-step sequence --- #}
+<section class="mb-5">
+    <div class="text-center mb-4">
+        <div class="rule-brass mx-auto mb-3"></div>
+        <h2 class="section-title mb-1">Cómo funciona</h2>
+        <p class="text-muted mb-0">Del postulante al aula, en tres pasos.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 card-hover">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="feature-icon"><i class="bi bi-person-lines-fill"></i></span>
+                        <span class="step-index">PASO 01</span>
+                    </div>
+                    <h5 class="mb-2">El profe crea su perfil</h5>
+                    <p class="text-muted mb-0">Sube título, certificado de antecedentes, asignaturas, comunas de preferencia y disponibilidad.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 card-hover">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="feature-icon"><i class="bi bi-patch-check"></i></span>
+                        <span class="step-index">PASO 02</span>
+                    </div>
+                    <h5 class="mb-2">La sicóloga lo evalúa</h5>
+                    <p class="text-muted mb-0">Una sicóloga laboral revisa antecedentes y entrevista. Solo los perfiles aprobados llegan a los colegios.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 card-hover">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="feature-icon"><i class="bi bi-funnel"></i></span>
+                        <span class="step-index">PASO 03</span>
+                    </div>
+                    <h5 class="mb-2">El colegio filtra y contacta</h5>
+                    <p class="text-muted mb-0">"Necesito un profe de lenguaje por una semana." Filtra, revisa el perfil y contacta directo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# --- Trust panel: the vetting is the product --- #}
+<section class="panel overflow-hidden mb-5">
+    <div class="row g-0 align-items-center">
+        <div class="col-md-4 text-center p-4 p-md-5" style="background:var(--pine-tint);border-right:1px solid var(--line);">
+            <span class="seal seal-lg mx-auto mb-3"><i class="bi bi-patch-check-fill"></i></span>
+            <div class="label-mono">Sello de evaluación</div>
+        </div>
+        <div class="col-md-8 p-4 p-md-5">
+            <h2 class="section-title mb-3">Lo que un colegio no puede armar solo</h2>
+            <p class="text-muted mb-3">
+                Cualquiera puede juntar currículums. Lo difícil es tener una base de profesores
+                <strong>ya filtrada y entrevistada</strong>, que no trabajan en tu colegio y están
+                disponibles hoy. Esa evaluación —hecha por una sicóloga laboral— es lo que hace
+                que valga la pena.
+            </p>
+            <ul class="list-unstyled row row-cols-1 row-cols-sm-2 g-2 mb-0 small">
+                <li><i class="bi bi-check2-circle text-brand me-1"></i>Antecedentes y títulos verificados</li>
+                <li><i class="bi bi-check2-circle text-brand me-1"></i>Entrevista personal con cada postulante</li>
+                <li><i class="bi bi-check2-circle text-brand me-1"></i>Puntaje y notas de la evaluadora</li>
+                <li><i class="bi bi-check2-circle text-brand me-1"></i>Solo perfiles aprobados son visibles</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+{# --- Dual CTA --- #}
+<section class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 card-hover">
+            <div class="card-body p-4 d-flex flex-column">
+                <span class="feature-icon mb-3"><i class="bi bi-building"></i></span>
+                <h4 class="mb-2">Para colegios</h4>
+                <p class="text-muted">Encuentra el reemplazo correcto sin llamadas a ciegas ni grupos de WhatsApp.</p>
+                <a href="{% url 'register_school' %}" class="btn btn-brand mt-auto align-self-start">Registrar mi colegio</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 card-hover">
+            <div class="card-body p-4 d-flex flex-column">
+                <span class="feature-icon mb-3"><i class="bi bi-person-badge"></i></span>
+                <h4 class="mb-2">Para profes</h4>
+                <p class="text-muted">Aparece frente a colegios que buscan justo lo que enseñas, con tu perfil validado.</p>
+                <a href="{% url 'register_applicant' %}" class="btn btn-brand mt-auto align-self-start">Postular como profe</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<p class="text-center text-muted">¿Ya tienes cuenta? <a href="{% url 'login' %}">Ingresa aquí</a>.</p>
 {% endblock %}
