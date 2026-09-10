@@ -90,11 +90,12 @@ p { line-height: 1.65; }
     font-weight: 600;
     letter-spacing: .14em;
     text-transform: uppercase;
-    color: var(--brass-700);
+    color: var(--pine-700);
+    font-variant-numeric: tabular-nums;
 }
 .text-muted { color: var(--muted) !important; }
 .text-brand { color: var(--pine) !important; }
-.text-brass { color: var(--brass-700) !important; }
+.text-brass { color: var(--pine) !important; }
 a { text-underline-offset: 2px; }
 
 /* --- Navbar ---------------------------------------------------------------- */
@@ -112,13 +113,9 @@ a { text-underline-offset: 2px; }
     gap: .55rem;
 }
 .site-nav .navbar-brand .brand-seal {
-    width: 1.9rem; height: 1.9rem;
-    color: var(--pine-900);
-    background: radial-gradient(circle at 30% 25%, #e4c06a, var(--brass) 70%);
-    border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 1rem;
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,.35), 0 1px 2px rgba(0,0,0,.25);
+    color: #cfe0d4;
+    font-size: 1.35rem;
 }
 .site-nav .nav-link {
     color: rgba(255, 255, 255, .82);
@@ -141,9 +138,9 @@ a { text-underline-offset: 2px; }
 }
 .btn-nav-ghost:hover { color: var(--pine-900); background: #fff; border-color: #fff; }
 .btn-nav-solid {
-    background: var(--brass); color: #fff; font-weight: 600; border: 1px solid var(--brass);
+    background: var(--paper); color: var(--pine-900); font-weight: 600; border: 1px solid var(--paper);
 }
-.btn-nav-solid:hover { background: var(--brass-700); border-color: var(--brass-700); color: #fff; }
+.btn-nav-solid:hover { background: #fff; border-color: #fff; color: var(--pine-900); }
 
 /* --- Buttons --------------------------------------------------------------- */
 .btn { font-weight: 600; border-radius: .55rem; padding: .5rem 1.1rem; }
@@ -171,7 +168,7 @@ a { text-underline-offset: 2px; }
 .btn-outline-light:hover { background: #fff; color: var(--pine-900); }
 .btn-outline-danger { color: var(--clay); border-color: var(--clay-tint); }
 .btn-outline-danger:hover { background: var(--clay); border-color: var(--clay); color: #fff; }
-.btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; box-shadow: none; }
+.btn:focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; box-shadow: none; }
 
 /* --- Cards ----------------------------------------------------------------- */
 .card {
@@ -193,7 +190,7 @@ a { text-underline-offset: 2px; }
 .hero {
     position: relative;
     background:
-        radial-gradient(120% 140% at 88% -10%, rgba(169,118,31,.16), transparent 55%),
+        radial-gradient(120% 140% at 88% -10%, rgba(216,230,220,.14), transparent 55%),
         linear-gradient(160deg, var(--pine-900) 0%, var(--pine-700) 58%, var(--pine) 100%);
     color: #fff;
     border-radius: 1.25rem;
@@ -213,7 +210,7 @@ a { text-underline-offset: 2px; }
 }
 .hero > * { position: relative; z-index: 1; }
 .hero h1 { color: #fff; font-weight: 700; letter-spacing: -.02em; }
-.hero .eyebrow { color: #eccf8a; }
+.hero .eyebrow { color: #bcd3c2; }
 .hero .hero-sub { color: rgba(255,255,255,.82); }
 .hero .stat-num {
     font-family: "Spectral", serif; font-weight: 700; font-size: 1.7rem; color: #fff;
@@ -232,20 +229,18 @@ a { text-underline-offset: 2px; }
 }
 .spec-card .spec-head { border-bottom: 1px solid var(--line); }
 
-/* --- Verification seal ----------------------------------------------------- */
+/* --- Verification mark -----------------------------------------------------
+   A quiet evergreen check — "revisado", not a medal. No gold, no gloss. */
 .seal {
-    --sz: 3rem;
+    --sz: 2.4rem;
     width: var(--sz); height: var(--sz);
-    border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
-    color: #fff; font-size: calc(var(--sz) * .42);
-    background: radial-gradient(circle at 32% 26%, #e0b563, var(--brass) 62%, var(--brass-700));
-    box-shadow: inset 0 0 0 3px rgba(255,255,255,.4), inset 0 0 0 4px rgba(0,0,0,.06),
-                0 3px 8px rgba(140,96,23,.35);
-    position: relative;
+    color: var(--pine);
+    font-size: calc(var(--sz) * .92);
+    background: none; border: 0; box-shadow: none;
     flex: none;
 }
-.seal-lg { --sz: 5rem; }
+.seal-lg { --sz: 3rem; }
 
 /* --- Feature / step icon --------------------------------------------------- */
 .feature-icon {
@@ -259,7 +254,7 @@ a { text-underline-offset: 2px; }
 .step-index {
     font-family: "IBM Plex Mono", monospace;
     font-weight: 600; font-size: .78rem; letter-spacing: .1em;
-    color: var(--brass-700);
+    color: var(--pine-700); font-variant-numeric: tabular-nums;
 }
 
 /* --- Avatar ---------------------------------------------------------------- */
@@ -291,19 +286,20 @@ a { text-underline-offset: 2px; }
 .badge-verified { background: var(--pine-tint); color: var(--pine-700); border: 1px solid var(--pine-tint-2); }
 .badge-pending  { background: var(--amber-tint); color: var(--amber); border: 1px solid #ecd9a3; }
 .badge-rejected { background: var(--clay-tint); color: var(--clay); border: 1px solid #ecc7bd; }
-.badge-bilingual{ background: var(--brass-tint); color: var(--brass-700); border: 1px solid #ecd9a3; }
+.badge-bilingual{ background: var(--surface-2); color: var(--ink-soft); border: 1px solid var(--line-strong); }
 .text-bg-info { background: var(--brass-tint) !important; color: var(--brass-700) !important; }
 .text-bg-success { background: var(--pine) !important; color: #fff !important; }
 .text-bg-light { background: var(--surface-2) !important; color: var(--ink-soft) !important; border: 1px solid var(--line); }
 
-/* Rating chip */
+/* Rating chip — a neutral record chip, star in evergreen (no gold) */
 .rating-chip {
     display: inline-flex; align-items: center; gap: .3rem;
     font-family: "IBM Plex Mono", monospace; font-weight: 600;
-    color: var(--brass-700); background: var(--brass-tint);
-    border: 1px solid #ecd9a3; border-radius: .45rem;
+    color: var(--ink); background: var(--surface-2);
+    border: 1px solid var(--line-strong); border-radius: .45rem;
     padding: .25rem .55rem; font-variant-numeric: tabular-nums;
 }
+.rating-chip i { color: var(--pine); }
 
 /* --- Forms ----------------------------------------------------------------- */
 .form-label { font-weight: 600; color: var(--ink-soft); font-size: .9rem; margin-bottom: .3rem; }
@@ -328,7 +324,7 @@ a { text-underline-offset: 2px; }
 
 /* --- Section framing ------------------------------------------------------- */
 .section-title { font-weight: 600; }
-.rule-brass { height: 3px; width: 2.5rem; background: var(--brass); border-radius: 2px; }
+.rule-brass { height: 3px; width: 2.5rem; background: var(--pine); border-radius: 2px; }
 
 /* Panel used for dossier-style content */
 .panel {
@@ -357,17 +353,113 @@ a { text-underline-offset: 2px; }
 .site-footer { background: var(--pine-900); color: rgba(255,255,255,.72); }
 .site-footer a { color: rgba(255,255,255,.9); }
 .site-footer .footer-brand { font-family: "Spectral", serif; color: #fff; font-weight: 600; }
+.site-footer .footer-brand i { color: #cfe0d4 !important; }
 
 /* --- Pagination ------------------------------------------------------------ */
 .page-link { color: var(--pine-700); border-color: var(--line); border-radius: .45rem; margin: 0 .15rem; }
 .page-link:hover { background: var(--pine-tint); color: var(--pine-900); }
 .page-item.disabled .page-link { color: var(--muted); background: var(--surface-2); }
 
+/* --- Tabs / pills / tables: keep them evergreen, never Bootstrap blue ------- */
+.nav-pills { --bs-nav-pills-link-active-bg: var(--pine); }
+.nav-pills .nav-link { color: var(--ink-soft); font-weight: 600; border-radius: .5rem; }
+.nav-pills .nav-link:hover { background: var(--pine-tint); color: var(--pine-900); }
+.nav-pills .nav-link.active { background: var(--pine); color: #fff; }
+.nav-tabs { --bs-nav-tabs-link-active-color: var(--pine-900); }
+.pagination {
+    --bs-pagination-active-bg: var(--pine);
+    --bs-pagination-active-border-color: var(--pine);
+    --bs-pagination-hover-color: var(--pine-900);
+    --bs-pagination-focus-color: var(--pine-900);
+    --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 92, 70, .2);
+}
+.list-group {
+    --bs-list-group-active-bg: var(--pine);
+    --bs-list-group-active-border-color: var(--pine);
+}
+.table {
+    --bs-table-hover-bg: var(--pine-tint);
+    --bs-table-hover-color: var(--pine-900);
+}
+.table > thead th, thead.table-light th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .7rem; letter-spacing: .09em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted);
+    background: var(--surface-2);
+    border-bottom-color: var(--line-strong);
+}
+
+/* --- Browser surfaces: theme what the browser would otherwise draw ---------- */
+html { scroll-behavior: smooth; }
+
+::selection { background: var(--pine-tint-2); color: var(--pine-900); }
+.hero ::selection, .site-nav ::selection, .site-footer ::selection {
+    background: rgba(207, 224, 212, .3); color: #fff;
+}
+
+.form-control, .form-select, textarea, [contenteditable] { caret-color: var(--pine); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--line-strong); border-radius: 999px;
+    border: 3px solid var(--paper); background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* The pine focus ring is the system's single focus signal, across links too */
+a:focus-visible,
+.page-link:focus-visible,
+.nav-link:focus-visible,
+.dropdown-item:focus-visible,
+summary:focus-visible,
+.navbar-brand:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid var(--pine);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+.site-nav a:focus-visible,
+.hero a:focus-visible,
+.site-footer a:focus-visible { outline-color: #cfe0d4; }
+
+/* --- Auth gateway ---------------------------------------------------------- */
+.auth-shell {
+    display: grid; grid-template-columns: 1fr;
+    max-width: 58rem; margin: 1rem auto;
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: var(--bs-border-radius-lg);
+    overflow: hidden; box-shadow: var(--shadow-md);
+}
+.auth-aside {
+    position: relative;
+    background:
+        radial-gradient(120% 120% at 85% -10%, rgba(207,224,212,.14), transparent 55%),
+        linear-gradient(160deg, var(--pine-900), var(--pine-700));
+    color: #fff; padding: 2.75rem;
+    flex-direction: column; justify-content: center;
+}
+.auth-aside .seal { color: #cfe0d4; }
+.auth-aside-title {
+    font-family: "Spectral", serif; font-weight: 700; font-size: 1.55rem;
+    line-height: 1.2; color: #fff; margin: 1.1rem 0 .75rem;
+}
+.auth-aside-sub { color: rgba(255,255,255,.82); line-height: 1.6; margin-bottom: 1.6rem; }
+.auth-aside-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .65rem; }
+.auth-aside-list li { color: rgba(255,255,255,.9); font-size: .95rem; display: flex; gap: .55rem; align-items: flex-start; }
+.auth-aside-list li i { color: #cfe0d4; margin-top: .15rem; }
+.auth-main { padding: 2.75rem 2rem; display: flex; flex-direction: column; justify-content: center; }
+.auth-card { width: 100%; max-width: 22rem; margin: 0 auto; }
+@media (min-width: 992px) {
+    .auth-shell { grid-template-columns: 1.05fr .95fr; }
+}
+
 /* --- Misc ------------------------------------------------------------------ */
 .list-group-item { background: transparent; border-color: var(--line); }
 hr { border-color: var(--line); opacity: 1; }
-::selection { background: var(--pine-tint-2); }
 
 @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
     .card-hover, .btn { transition: none; }
 }
