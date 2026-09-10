@@ -14,15 +14,15 @@
 # - Watchtower auto-pulls a new `web` image pushed to GHCR and recreates it.
 # - Persistent named volumes: postgres_data (db) and media_volume (uploads).
 #
-# PORT: defaults to 80 (HTTP) and 443 (HTTPS). To use a non-standard HTTP port,
-# set HTTP_PORT, e.g.  HTTP_PORT=8080 docker compose -f docker-compose.prod.yml up -d
-# then browse http://<ec2-ip>:8080  (open that port in the security group).
+# PORT: publishes a single HTTP port, default 8080 (this host already uses
+# 80/443). Browse http://<ec2-ip>:8080, or point your existing reverse proxy at
+# it. Override with HTTP_PORT=NNNN if 8080 is taken too. Open the port in the
+# EC2 security group.
 #
-# HTTPS: leave CADDY_SITE_ADDRESS at the default ":80" for plain HTTP on the EC2
-# public IP. Point a domain at the host and set CADDY_SITE_ADDRESS=tu-dominio.cl
-# (plus CSRF_TRUSTED_ORIGINS=https://tu-dominio.cl) and Caddy obtains a Let's
-# Encrypt certificate automatically. (Automatic HTTPS needs the standard ports
-# 80/443; on a custom HTTP-only port, use plain http.)
+# HTTPS: not handled here in this HTTP-only setup — terminate TLS at your
+# existing proxy in front. (If you'd rather have Caddy own 80/443 and do
+# automatic Let's Encrypt HTTPS, see the note on the caddy `ports:` below and
+# set CADDY_SITE_ADDRESS to your domain + CSRF_TRUSTED_ORIGINS=https://domain.)
 #
 # GHCR package must be PUBLIC to pull with no host login (GitHub → repo →
 # Packages → make public). To keep it private, `docker login ghcr.io` on the
@@ -76,13 +76,16 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
-      # Host port is configurable. Default: HTTP on 80 + HTTPS on 443.
-      # For a non-standard HTTP port, set HTTP_PORT (e.g. HTTP_PORT=8080) and
-      # reach the app at http://<ec2-ip>:8080 — remember to open that port in
-      # the EC2 security group. Caddy still listens on :80 inside the container.
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-      - "${HTTPS_PORT:-443}:443/udp"
+      # HTTP-only on a single non-standard host port (this host already uses
+      # 80/443 for something else). Reach the app at http://<ec2-ip>:8080, or
+      # front it with your existing reverse proxy pointing at this port.
+      # Override with HTTP_PORT if 8080 is also taken. Caddy still listens on
+      # :80 inside the container. Remember to open the port in the security group.
+      #
+      # If instead you want Caddy to own 80/443 and do automatic HTTPS, replace
+      # this with:  - "80:80" / - "443:443" / - "443:443/udp"  and set
+      # CADDY_SITE_ADDRESS to your domain.
+      - "${HTTP_PORT:-8080}:80"
     environment:
       CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-:80}
     configs:
