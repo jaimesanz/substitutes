@@ -1,45 +1,37 @@
-# Production compose for a single EC2 host — "just works", no host files needed.
+# Production compose for the shared EC2 host. Served at https://jaimesa.nz/substitutes/.
 #
+#   cp .env.production.example .env      # fill in every value (never commit it)
 #   docker compose -f docker-compose.prod.yml up -d
 #
-# - No host bind-mounts: the Caddy reverse-proxy config is inlined via the
-#   compose `configs:` block below, so there's nothing to copy onto the host.
-# - No required .env: every setting has an inline default (override via env or a
-#   .env if you want). For a real deployment, override at least SECRET_KEY,
-#   POSTGRES_PASSWORD and DJANGO_SUPERUSER_PASSWORD.
-# - `web` image comes from GHCR (published by CI). Its entrypoint runs
-#   migrate + collectstatic + seed before Gunicorn, so updates self-migrate.
-#   Static files are served by WhiteNoise from inside the app; Caddy serves
-#   uploaded media from a shared volume and reverse-proxies everything else.
-# - Watchtower auto-pulls a new `web` image pushed to GHCR and recreates it.
-# - Persistent named volumes: postgres_data (db) and media_volume (uploads).
-#
-# PORT: publishes a single HTTP port, default 8080 (this host already uses
-# 80/443). Browse http://<ec2-ip>:8080, or point your existing reverse proxy at
-# it. Override with HTTP_PORT=NNNN if 8080 is taken too. Open the port in the
-# EC2 security group.
-#
-# HTTPS: not handled here in this HTTP-only setup — terminate TLS at your
-# existing proxy in front. (If you'd rather have Caddy own 80/443 and do
-# automatic Let's Encrypt HTTPS, see the note on the caddy `ports:` below and
-# set CADDY_SITE_ADDRESS to your domain + CSRF_TRUSTED_ORIGINS=https://domain.)
-#
-# GHCR package must be PUBLIC to pull with no host login (GitHub → repo →
-# Packages → make public). To keep it private, `docker login ghcr.io` on the
-# host once and uncomment the docker-config mount in the watchtower service.
+# - No proxy here: the host's shared Caddy (the load-balancer repo) owns 80/443, terminates TLS,
+#   strips /substitutes and forwards to `web`, which it reaches as substitutes-web on the external
+#   `edge` network (`docker network create edge`, once per host). It also serves uploaded media
+#   straight from the media_volume volume, mounted read-only into it.
+# - DJANGO_SCRIPT_NAME=/substitutes makes Django add the path back to every URL it builds and
+#   scopes cookies to it; SECURE_COOKIES=1 because the proxy serves HTTPS only.
+# - Secrets have no defaults: compose refuses to start until .env sets them.
+# - `web` image comes from GHCR (published by CI on every push to main). Its entrypoint runs
+#   migrate + collectstatic + seed before Gunicorn, so updates self-migrate. The host's Watchtower
+#   (in the benefits-aggregator stack) pulls new images for containers labelled below.
+# - Persistent named volumes: postgres_data (db) and media_volume (uploads). With the project
+#   name `substitutes` they are substitutes_postgres_data and substitutes_media_volume; the shared
+#   proxy mounts the latter by that name.
 
 x-web-env: &web-env
-  SECRET_KEY: ${SECRET_KEY:-change-me-insecure-default-key}
-  DEBUG: ${DEBUG:-0}
-  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
-  CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost,http://127.0.0.1}
+  SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+  DEBUG: "0"
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:?set ALLOWED_HOSTS in .env}
+  CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:?set CSRF_TRUSTED_ORIGINS in .env}
+  DJANGO_SCRIPT_NAME: ${DJANGO_SCRIPT_NAME:-}
+  SECURE_COOKIES: ${SECURE_COOKIES:-0}
   POSTGRES_DB: ${POSTGRES_DB:-reemplazos}
   POSTGRES_USER: ${POSTGRES_USER:-reemplazos}
-  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reemplazos-prod-pass}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
   POSTGRES_HOST: db
   POSTGRES_PORT: "5432"
-  DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@substitutes.local}
-  DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin12345}
+  # Creates this superuser on first start only if both are set; never changes an existing one.
+  DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
+  DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
 
 services:
   db:
@@ -48,7 +40,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-reemplazos}
       POSTGRES_USER: ${POSTGRES_USER:-reemplazos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reemplazos-prod-pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -66,67 +58,20 @@ services:
       - "8000"
     volumes:
       - media_volume:/app/media
+    networks:
+      default: {}
+      edge:
+        aliases: [substitutes-web]
     depends_on:
       db:
         condition: service_healthy
     labels:
       com.centurylinklabs.watchtower.enable: "true"
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      # HTTP-only on a single non-standard host port (this host already uses
-      # 80/443 for something else). Reach the app at http://<ec2-ip>:8080, or
-      # front it with your existing reverse proxy pointing at this port.
-      # Override with HTTP_PORT if 8080 is also taken. Caddy still listens on
-      # :80 inside the container. Remember to open the port in the security group.
-      #
-      # If instead you want Caddy to own 80/443 and do automatic HTTPS, replace
-      # this with:  - "80:80" / - "443:443" / - "443:443/udp"  and set
-      # CADDY_SITE_ADDRESS to your domain.
-      - "${HTTP_PORT:-8080}:80"
-    environment:
-      CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-:80}
-    configs:
-      - source: caddyfile
-        target: /etc/caddy/Caddyfile
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-      - media_volume:/srv/media:ro
-    depends_on:
-      - web
-
-  watchtower:
-    image: containrrr/watchtower:1.7.1
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      # For a PRIVATE GHCR image: `docker login ghcr.io` on the host, then
-      # uncomment the next line so Watchtower can authenticate pulls.
-      # - ${HOME}/.docker/config.json:/config.json:ro
-    environment:
-      WATCHTOWER_LABEL_ENABLE: "true"
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: "300"
-
-configs:
-  caddyfile:
-    content: |
-      {$$CADDY_SITE_ADDRESS} {
-          encode zstd gzip
-          handle_path /media/* {
-              root * /srv/media
-              file_server
-          }
-          handle {
-              reverse_proxy web:8000
-          }
-      }
-
 volumes:
   postgres_data:
   media_volume:
-  caddy_data:
-  caddy_config:
+
+networks:
+  edge:
+    external: true

@@ -33,18 +33,21 @@ Crea profes de ejemplo (aprobados y pendientes), una evaluadora y un colegio.
 Contraseña de todas las cuentas demo: `demo1234`. Cuentas: `colegio@demo.cl`,
 `evaluadora@demo.cl`, `ana@demo.cl`, etc.
 
-## Desplegar en EC2
-1. Instala Docker + plugin Compose en la instancia.
-2. Clona el repo y crea `.env` con valores de producción:
-   - `DEBUG=0`
-   - `ALLOWED_HOSTS=tu-dominio.cl,tu-ec2-public-dns`
-   - `CSRF_TRUSTED_ORIGINS=https://tu-dominio.cl`
-   - contraseñas fuertes para Postgres y el superusuario.
-3. `docker compose up -d --build`
-4. Abre el puerto **80** (y 443 al agregar HTTPS) en el security group.
+## Producción (EC2 compartida)
+Se sirve en **https://jaimesa.nz/substitutes/** con `docker-compose.prod.yml`, detrás del
+Caddy compartido del host (repo `load-balancer`), que tiene los puertos 80/443, el certificado
+TLS y sirve `/substitutes/media/` desde el volumen `substitutes_media_volume`. La app se une a la
+red Docker externa `edge` como `substitutes-web`; Gunicorn corre la app y WhiteNoise sirve los
+estáticos.
 
-Nginx sirve `/static/` y `/media/`; Gunicorn corre la app. Los volúmenes
-`postgres_data`, `static_volume` y `media_volume` persisten datos y archivos subidos.
+1. En el servidor, junto al compose: `cp .env.production.example .env` y completa los secretos
+   (`openssl rand -hex 32`). Sin ellos, compose no arranca.
+2. `docker network create edge` (una vez por host) y `docker compose -f docker-compose.prod.yml up -d`.
+3. En el repo `load-balancer`: el bloque `handle_path /substitutes/*` de `jaimesa.nz`.
+
+`DJANGO_SCRIPT_NAME=/substitutes` hace que Django agregue el prefijo a todas sus URLs y limite
+las cookies a esa ruta. Sin él (desarrollo), la app vive en la raíz. Los enlaces en plantillas
+van siempre con `{% url %}`; un test falla si aparece un `href="/..."` literal.
 
 ### Comandos útiles
 ```bash
@@ -71,5 +74,5 @@ docker-compose.yml
 
 ## Pendiente (fuera del MVP)
 Pagos/suscripciones, aprobación de colegios, rol de ventas dedicado, mensajería
-interna, envío real de emails (invitaciones hoy son por enlace), HTTPS/Let's Encrypt,
+interna, envío real de emails (invitaciones hoy son por enlace),
 calendario de disponibilidad avanzado, almacenamiento de archivos en S3.

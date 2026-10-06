@@ -22,6 +22,13 @@ CSRF_TRUSTED_ORIGINS = env.list(
     default=["http://localhost", "http://127.0.0.1"],
 )
 
+# Served under a path (e.g. /substitutes) behind a proxy that strips it: Django adds it back to
+# every URL it builds, and cookies stay within it. Unset, the app lives at the root.
+SCRIPT_NAME = env("DJANGO_SCRIPT_NAME", default="").rstrip("/")
+if SCRIPT_NAME:
+    FORCE_SCRIPT_NAME = SCRIPT_NAME
+    SESSION_COOKIE_PATH = CSRF_COOKIE_PATH = SCRIPT_NAME + "/"
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -102,11 +109,13 @@ USE_I18N = True
 USE_TZ = True
 
 # --- Static & media ---
-STATIC_URL = "/static/"
+# With the path prefix: Django doesn't add it to absolute settings. WhiteNoise strips
+# FORCE_SCRIPT_NAME again when matching files.
+STATIC_URL = f"{SCRIPT_NAME}/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-MEDIA_URL = "/media/"
+MEDIA_URL = f"{SCRIPT_NAME}/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 STORAGES = {
@@ -150,3 +159,5 @@ if not DEBUG:
     SESSION_COOKIE_HTTPONLY = True
     CSRF_COOKIE_HTTPONLY = False
     X_FRAME_OPTIONS = "DENY"
+    # Only over HTTPS (behind the shared proxy); a plain-HTTP deployment would lose its logins.
+    SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = env.bool("SECURE_COOKIES", default=False)
