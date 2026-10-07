@@ -12,10 +12,13 @@
 # - Secrets have no defaults: compose refuses to start until .env sets them.
 # - `web` image comes from GHCR (published by CI on every push to main). Its entrypoint runs
 #   migrate + collectstatic + seed before Gunicorn, so updates self-migrate. The host's Watchtower
-#   (in the benefits-aggregator stack) pulls new images for containers labelled below.
-# - Persistent named volumes: postgres_data (db) and media_volume (uploads). With the project
-#   name `substitutes` they are substitutes_postgres_data and substitutes_media_volume; the shared
-#   proxy mounts the latter by that name.
+#   (in the load-balancer stack) pulls new images for containers labelled below.
+# - Persistent named volumes: pgdata (db) and media_volume (uploads). With the project name
+#   `substitutes` they are substitutes_pgdata and substitutes_media_volume; the shared proxy mounts
+#   the latter by that name.
+# - db uses postgres:16-alpine, the same image as the host's other stacks, so the server keeps one
+#   copy. It replaced postgres:16 (Debian) by dump and restore into pgdata: the two images sort
+#   text differently, so the old data directory (postgres_data) can't be reused as is.
 
 x-web-env: &web-env
   SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
@@ -35,14 +38,14 @@ x-web-env: &web-env
 
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-reemplazos}
       POSTGRES_USER: ${POSTGRES_USER:-reemplazos}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reemplazos} -d ${POSTGRES_DB:-reemplazos}"]
       interval: 10s
@@ -69,7 +72,7 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
 
 volumes:
-  postgres_data:
+  pgdata:
   media_volume:
 
 networks:
