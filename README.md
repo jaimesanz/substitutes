@@ -33,21 +33,22 @@ Crea profes de ejemplo (aprobados y pendientes), una evaluadora y un colegio.
 Contraseña de todas las cuentas demo: `demo1234`. Cuentas: `colegio@demo.cl`,
 `evaluadora@demo.cl`, `ana@demo.cl`, etc.
 
-## Producción (EC2 compartida)
-Se sirve en **https://jaimesa.nz/substitutes/** con `docker-compose.prod.yml`, detrás del
-Caddy compartido del host (repo `load-balancer`), que tiene los puertos 80/443, el certificado
-TLS y sirve `/substitutes/media/` desde el volumen `substitutes_media_volume`. La app se une a la
-red Docker externa `edge` como `substitutes-web`; Gunicorn corre la app y WhiteNoise sirve los
-estáticos.
+## Producción (Raspberry Pi)
+Se sirve en **https://substitutes.jaimesa.nz/** con `docker-compose.prod.yml`, a través de un
+Cloudflare Tunnel. Postgres, los respaldos, el túnel y Watchtower vienen del stack compartido del
+host (`services/shared` en el repo `self_hosted`). Gunicorn corre la app, WhiteNoise sirve los
+estáticos y el contenedor `media` sirve `/media/` desde el volumen `substitutes_media_volume`.
 
-1. En el servidor, junto al compose: `cp .env.production.example .env` y completa los secretos
+1. En Postgres compartido, crea la base y el usuario (ver el compose de `services/shared`).
+2. En el servidor, junto al compose: `cp .env.production.example .env` y completa los secretos
    (`openssl rand -hex 32`). Sin ellos, compose no arranca.
-2. `docker network create edge` (una vez por host) y `docker compose -f docker-compose.prod.yml up -d`.
-3. En el repo `load-balancer`: el bloque `handle_path /substitutes/*` de `jaimesa.nz`.
+3. `docker compose -f docker-compose.prod.yml up -d`.
+4. En Cloudflare, en el túnel: `/media/*` a `http://substitutes-media:8080` y el resto a
+   `http://substitutes-web:8000`.
 
-`DJANGO_SCRIPT_NAME=/substitutes` hace que Django agregue el prefijo a todas sus URLs y limite
-las cookies a esa ruta. Sin él (desarrollo), la app vive en la raíz. Los enlaces en plantillas
-van siempre con `{% url %}`; un test falla si aparece un `href="/..."` literal.
+Si la app se sirve bajo una ruta, `DJANGO_SCRIPT_NAME` hace que Django agregue el prefijo a todas
+sus URLs y limite las cookies a esa ruta. Los enlaces en plantillas van siempre con `{% url %}`; un
+test falla si aparece un `href="/..."` literal.
 
 ### Comandos útiles
 ```bash

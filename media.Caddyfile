@@ -1,0 +1,12 @@
+# Serves uploads at /media/ for docker-compose.prod.yml. no-store keeps Cloudflare from caching them.
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	root * /srv
+	header Cache-Control "private, no-store"
+	header X-Content-Type-Options nosniff
+	file_server
+}

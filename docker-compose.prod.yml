@@ -1,24 +1,23 @@
-# Production compose for the shared EC2 host. Served at https://jaimesa.nz/substitutes/.
+# Production compose for the Raspberry Pi (arm64). Served at https://substitutes.jaimesa.nz/.
 #
 #   cp .env.production.example .env      # fill in every value (never commit it)
 #   docker compose -f docker-compose.prod.yml up -d
 #
-# - No proxy here: the host's shared Caddy (the load-balancer repo) owns 80/443, terminates TLS,
-#   strips /substitutes and forwards to `web`, which it reaches as substitutes-web on the external
-#   `edge` network (`docker network create edge`, once per host). It also serves uploaded media
-#   straight from the media_volume volume, mounted read-only into it.
-# - DJANGO_SCRIPT_NAME=/substitutes makes Django add the path back to every URL it builds and
-#   scopes cookies to it; SECURE_COOKIES=1 because the proxy serves HTTPS only.
+# - Holds only the app's own containers. Postgres, backups, the Cloudflare Tunnel and Watchtower come
+#   from the host's shared stack (services/shared in the self_hosted repo), which must be running.
+#   Create the database and login there first, as that stack's compose file describes.
+# - The tunnel terminates TLS and forwards by path: /media/* to substitutes-media:8080, everything
+#   else to substitutes-web:8000, both on the external `tunnel` network. Nothing publishes ports.
+# - `media` serves uploads read-only, because Django doesn't serve them in production. Its
+#   Caddyfile marks them uncacheable, so Cloudflare doesn't keep copies of teachers' certificates.
+# - SECURE_COOKIES=1 because the tunnel serves HTTPS only.
 # - Secrets have no defaults: compose refuses to start until .env sets them.
-# - `web` image comes from GHCR (published by CI on every push to main). Its entrypoint runs
-#   migrate + collectstatic + seed before Gunicorn, so updates self-migrate. The host's Watchtower
-#   (in the load-balancer stack) pulls new images for containers labelled below.
-# - Persistent named volumes: pgdata (db) and media_volume (uploads). With the project name
-#   `substitutes` they are substitutes_pgdata and substitutes_media_volume; the shared proxy mounts
-#   the latter by that name.
-# - db uses postgres:16-alpine, the same image as the host's other stacks, so the server keeps one
-#   copy. It replaced postgres:16 (Debian) by dump and restore into pgdata: the two images sort
-#   text differently, so the old data directory (postgres_data) can't be reused as is.
+# - `web` image comes from GHCR (published by CI for amd64 and arm64 on every push to main). Its
+#   entrypoint waits for Postgres, then runs migrate + collectstatic + seed before Gunicorn, so
+#   updates self-migrate. The shared Watchtower pulls new images for containers labelled below.
+# - Persistent named volume: media_volume (uploads), named substitutes_media_volume on the host.
+
+name: substitutes
 
 x-web-env: &web-env
   SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
@@ -30,31 +29,20 @@ x-web-env: &web-env
   POSTGRES_DB: ${POSTGRES_DB:-reemplazos}
   POSTGRES_USER: ${POSTGRES_USER:-reemplazos}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-  POSTGRES_HOST: db
+  POSTGRES_HOST: shared-postgres
   POSTGRES_PORT: "5432"
   # Creates this superuser on first start only if both are set; never changes an existing one.
   DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
   DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
 
-services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-reemplazos}
-      POSTGRES_USER: ${POSTGRES_USER:-reemplazos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reemplazos} -d ${POSTGRES_DB:-reemplazos}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+x-logging: &logging
+  driver: journald
+  options:
+    tag: "{{.Name}}"
 
+services:
   web:
     image: ghcr.io/jaimesanz/substitutes:${IMAGE_TAG:-latest}
-    pull_policy: always
     restart: unless-stopped
     environment: *web-env
     expose:
@@ -63,18 +51,37 @@ services:
       - media_volume:/app/media
     networks:
       default: {}
-      edge:
+      data: {}
+      tunnel:
         aliases: [substitutes-web]
-    depends_on:
-      db:
-        condition: service_healthy
     labels:
       com.centurylinklabs.watchtower.enable: "true"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/', headers={'Host': 'localhost'}), timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    mem_limit: 384m
+    logging: *logging
+
+  media:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - ./media.Caddyfile:/etc/caddy/Caddyfile:ro
+      - media_volume:/srv/media:ro
+    networks:
+      tunnel:
+        aliases: [substitutes-media]
+    mem_limit: 64m
+    logging: *logging
 
 volumes:
-  pgdata:
   media_volume:
 
 networks:
-  edge:
+  data:
+    external: true
+  tunnel:
     external: true
