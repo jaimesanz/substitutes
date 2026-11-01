@@ -37,9 +37,12 @@ Contraseña de todas las cuentas demo: `demo1234`. Cuentas: `colegio@demo.cl`,
 Se sirve en **https://substitutes.jaimesa.nz/** con `docker-compose.prod.yml`, a través de un
 Cloudflare Tunnel. Postgres, los respaldos, el túnel y Watchtower vienen del stack compartido del
 host (`services/shared` en el repo `self_hosted`). Gunicorn corre la app, WhiteNoise sirve los
-estáticos y el contenedor `media` sirve `/media/` desde el volumen `substitutes_media_volume`.
+estáticos y el contenedor `media` sirve `/media/` desde el volumen `substitutes_media_volume`. Los
+contenedores corren sin root, sin capabilities y con sistema de archivos de solo lectura, y `web` no
+tiene acceso a internet.
 
-1. En Postgres compartido, crea la base y el usuario (ver el compose de `services/shared`).
+1. En Postgres compartido, crea la base y el usuario, y las redes `substitutes-data` y
+   `substitutes-tunnel` (ver el compose de `services/shared`).
 2. En el servidor, junto al compose: `cp .env.production.example .env` y completa los secretos
    (`openssl rand -hex 32`). Sin ellos, compose no arranca.
 3. `docker compose -f docker-compose.prod.yml up -d`.

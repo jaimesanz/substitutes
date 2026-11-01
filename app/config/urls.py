@@ -12,7 +12,8 @@ urlpatterns = [
     path("evaluaciones/", include("evaluations.urls")),
 ]
 
-# In DEBUG, Django serves media; in production Nginx handles /media/ and /static/.
+# In DEBUG, Django serves media; in production the `media` container handles /media/ and WhiteNoise
+# handles /static/.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
