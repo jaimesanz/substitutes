@@ -7,7 +7,7 @@
 #   from the host's shared stack (services/shared in the self_hosted repo), which must be running.
 #   Create the database and login there first, as that stack's compose file describes.
 # - The tunnel terminates TLS and forwards by path: /media/* to substitutes-media:8080, everything
-#   else to substitutes-web:8000, both on the external `tunnel` network. Nothing publishes ports.
+#   else to substitutes-web:8000, both on the external `substitutes-tunnel` network. Nothing publishes ports.
 # - `media` serves uploads read-only, because Django doesn't serve them in production. Its
 #   Caddyfile marks them uncacheable, so Cloudflare doesn't keep copies of teachers' certificates.
 # - SECURE_COOKIES=1 because the tunnel serves HTTPS only.
@@ -18,6 +18,12 @@
 # - Persistent named volume: media_volume (uploads), named substitutes_media_volume on the host.
 
 name: substitutes
+
+x-hardening: &hardening
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  read_only: true
+  pids_limit: 256
 
 x-web-env: &web-env
   SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
@@ -34,6 +40,7 @@ x-web-env: &web-env
   # Creates this superuser on first start only if both are set; never changes an existing one.
   DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
   DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+  HOME: /tmp
 
 x-logging: &logging
   driver: journald
@@ -42,17 +49,23 @@ x-logging: &logging
 
 services:
   web:
+    <<: *hardening
     image: ghcr.io/jaimesanz/substitutes:${IMAGE_TAG:-latest}
+    # The image has no user of its own. Its entrypoint collects static files at start.
+    user: "1000:1000"
+    tmpfs:
+      - /tmp:size=64m,uid=1000,gid=1000
+      - /app/staticfiles:size=64m,uid=1000,gid=1000
     restart: unless-stopped
     environment: *web-env
     expose:
       - "8000"
     volumes:
       - media_volume:/app/media
+    # No internet access: it only needs Postgres and the tunnel.
     networks:
-      default: {}
-      data: {}
-      tunnel:
+      substitutes-data: {}
+      substitutes-tunnel:
         aliases: [substitutes-web]
     labels:
       com.centurylinklabs.watchtower.enable: "true"
@@ -66,13 +79,21 @@ services:
     logging: *logging
 
   media:
+    <<: *hardening
     image: caddy:2-alpine
+    user: "1000:1000"
+    # The image's binary carries this file capability, and won't start without it. Nothing binds a
+    # low port.
+    cap_add: [NET_BIND_SERVICE]
+    tmpfs:
+      - /config:size=8m,uid=1000,gid=1000
+      - /data:size=8m,uid=1000,gid=1000
     restart: unless-stopped
     volumes:
       - ./media.Caddyfile:/etc/caddy/Caddyfile:ro
       - media_volume:/srv/media:ro
     networks:
-      tunnel:
+      substitutes-tunnel:
         aliases: [substitutes-media]
     mem_limit: 64m
     logging: *logging
@@ -81,7 +102,7 @@ volumes:
   media_volume:
 
 networks:
-  data:
+  substitutes-data:
     external: true
-  tunnel:
+  substitutes-tunnel:
     external: true
